@@ -2,7 +2,7 @@ import json
 import os
 import time
 from prompts.banco import BANCO_DE_PROMPT
-from consumir_gemini import armar_peticion, enviar_peticion, extraer_texto, parsear_respuesta_json
+from consumir_gemini import armar_peticion, enviar_peticion, extraer_texto, parsear_respuesta_json, modelo
 
 registro = {}
 
@@ -14,7 +14,7 @@ try:
         for intento in range(intentos):
             url, body = armar_peticion(
                 prompt["ejemplo_usuario"],
-                "gemini-3.5-flash-lite",
+                modelo,
                 prompt["system_instruction"],
                 prompt["response_schema"]
             )

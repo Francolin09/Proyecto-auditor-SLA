@@ -110,8 +110,11 @@ cadena_tres_pasos = (
     |(lambda reporte : parsear_respuesta_json(reporte, claves_reporte)) #valida que el JSON traiga todas las claves
 )
 
-respuesta = cadena_tres_pasos.invoke(
-    {"texto": texto_prueba}
-)#se pasa el primer texto
+#Solo se ejecuta si corremos este archivo directamente (python src/cadena_tres_pasos.py).
+#Así enrutamiento.py puede importar paso_extraccion y claves_reporte sin gastar peticiones.
+if __name__ == "__main__":
+    respuesta = cadena_tres_pasos.invoke(
+        {"texto": texto_prueba}
+    )#se pasa el primer texto
 
-print(respuesta)
+    print(respuesta)

@@ -8,7 +8,7 @@ import json
 load_dotenv()
 
 api_key = os.getenv("GEMINI_API_KEY")
-modelo = "gemini-3.6-flash"
+modelo = "gemini-3.1-flash-lite" #modelo elegido en docs/decision_arquitectura_modelo.md
     
 url_base = f"https://generativelanguage.googleapis.com/v1beta/models/"
 
@@ -84,7 +84,7 @@ def obtener_dato_prueba(pregunta):
         "Responde únicamente con un JSON con las claves 'tipo_clausula' "
         "('Financiera', 'SLA', 'Legal' o 'Normativa') y 'nivel_riesgo' ('Bajo', 'Medio' o 'Alto')."
     )
-    url, body= armar_peticion(pregunta, "gemini-3.6-flash",system_instruction)
+    url, body= armar_peticion(pregunta, modelo,system_instruction)
     inicio = time.perf_counter() #Empezamos el contador
     datos = enviar_peticion(url, body)
     fin = time.perf_counter() # Terminamos el contador

@@ -17,9 +17,14 @@ El Auditor analiza cláusulas de contratos con proveedores (SLAs, multas, plazos
 | `src/evaluacion_modelos.py` | Compara latencia y costo de varios modelos Gemini sobre una cláusula de prueba (ver `docs/decision_arquitectura_modelo.md`). |
 | `pipeline_limpieza.py` | Limpia y tokeniza fragmentos de contratos (`limpiar_texto`, `tokenizar`, `vectorizar`, `procesar_texto`). |
 | `pipeline.py` | Mide la calidad de las respuestas del auditor contra una referencia: `precision`, `cobertura` y `f1`; guarda los resultados en `resultados_metricas.json`. |
-| `src/cadena.py` | Cadena LangChain simple (`prompt \| modelo \| parser`) que explica una cláusula a un analista de compras. |
-| `src/cadena_tres_pasos.py` | Cadena LangChain secuencial de 3 pasos: extrae los puntos clave de una cláusula → los simplifica sin jerga legal → los formatea en viñetas. |
+| `src/cadena_tres_pasos.py` | Cadena LangChain secuencial de 3 pasos: extracción completa de la cláusula → clasificación y riesgo → reporte JSON validado con `parsear_respuesta_json`. |
+| `src/enrutamiento.py` | Flujo con enrutamiento condicional: `RunnablePassthrough.assign` acumula `extraccion` y `clasificacion` → `RunnableBranch` deriva a la rama **Financiero/SLA** o **Legal/Normativo** (o a revisión manual si no se reconoce) → reporte JSON. Incluye `with_fallbacks`, registro de errores en `error.log` (`logging`) y `procesar_mensaje_seguro`. |
 | `test_cliente.py` | 25 pruebas unitarias con mocks (sin red): cliente HTTP, reintentos, costos, limpieza, validación JSON, métricas e indicador económico. |
+| `test_enrutamiento.py` | 8 pruebas con modelo simulado (sin red): rutas financiera, legal y no reconocida, fallback por JSON inválido o caída del modelo, y registro en `error.log`. |
+
+Todos los módulos usan el modelo **`gemini-3.1-flash-lite`**, elegido en `docs/decision_arquitectura_modelo.md`. La única excepción es `src/evaluacion_modelos.py`, que compara varios candidatos.
+
+> Los archivos de práctica de cada contenido del curso no forman parte de este repositorio: el concepto se aplica directamente en los módulos del Auditor.
 
 ### Esquema JSON del auditor
 
@@ -51,8 +56,8 @@ python cliente.py              # auditoría rápida de una cláusula SLA
 python pipeline_limpieza.py    # limpieza/tokenización de un fragmento de contrato
 python pipeline.py             # métricas de calidad del auditor -> resultados_metricas.json
 python src/consumir_gemini.py  # clasificación JSON (tipo_clausula, nivel_riesgo) + latencia y costo
-python src/cadena.py           # cadena LangChain simple
 python src/cadena_tres_pasos.py
+python src/enrutamiento.py     # auditoría con enrutamiento Financiero/SLA vs. Legal/Normativo (errores en error.log)
 ```
 
 Desde `src/` (usan imports relativos a esa carpeta):
@@ -67,17 +72,19 @@ python evaluacion_modelos.py   # comparación de modelos
 
 ## Pruebas
 
+Con el entorno virtual del proyecto activado (`.venv`):
+
 ```bash
 python -m pytest -q
 ```
 
-Las pruebas no consumen la API (usan `unittest.mock`), así que se ejecutan sin red y sin costo.
+Las pruebas no consumen la API (usan `unittest.mock` y un modelo simulado de LangChain), así que se ejecutan sin red y sin costo.
 
 ## Estructura de carpetas
 
 - `src/` : código fuente del Auditor.
 - `docs/` : documentación técnica (diagrama, decisión de modelo, límites de la métrica).
-- `tests/` : reservado para la suite de pruebas cuando el proyecto crezca (hoy las pruebas viven en `test_cliente.py`).
+- `tests/` : reservado para la suite de pruebas cuando el proyecto crezca (hoy las pruebas viven en `test_cliente.py` y `test_enrutamiento.py`).
 - `requirements.txt` : dependencias de Python del proyecto.
 - `.env.example` : plantilla de las variables de entorno, sin valores reales.
 - `.gitignore` : archivos y carpetas que Git ignora (entorno virtual, `.env`, cachés).
@@ -86,7 +93,6 @@ Las pruebas no consumen la API (usan `unittest.mock`), así que se ejecutan sin 
 
 Estas piezas se agregarán en los próximos bloques del programa; **no existen todavía en el código**:
 
-- Enrutamiento condicional de la cadena según `categoria_riesgo` (rama Financiero/SLA vs. rama Legal/Normativo).
 - Agente con herramienta de cálculo de penalidades/SLA a partir de `montos`, `plazos` y el valor de la UF.
 - RAG sobre un manual de políticas internas de compra, con citación de fuentes.
 - Mitigación de prompt injection en los textos de contratos recibidos.
