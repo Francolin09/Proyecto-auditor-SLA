@@ -67,12 +67,22 @@ respuesta_generica = RunnableLambda( lambda x: ("Gracias por tu mensaje, un mime
 
 cadena_robusta = cadena_con_enrutamiento.with_fallbacks([respuesta_generica])
 
+#Aca en vez de esto, haremos una funcion para separar responsabilidades y modularizar el proceso
+# resultado = cadena_robusta.invoke(
+#     {"mensaje": "Deberían tener más agentes disponibles"}
+# )
 
-resultado = cadena_robusta.invoke(
-    {"mensaje": "Deberían tener más agentes disponibles"}
-)
+# print(resultado)
 
-print(resultado)
+def procesar_mensaje_seguro(cadena, mensaje):
+    try:
+        return cadena.invoke({"mensaje": mensaje})
+    except Exception as error:
+        return "No pudimos procesar tu mensaje en este momento, por favor intenta más tarde"
 
+#Con este codigo le diremos solamente ejecuta el siguiente codigo si la ejecucion es directa del archivo (python enrutamiento.py). No ejecutes si es import.
+if __name__ == "__main__":
+    mensaje = "Llevo varios dias sin poder entrar a mi cuenta"
+    print(procesar_mensaje_seguro(cadena_robusta,mensaje))
 
 

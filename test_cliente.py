@@ -8,7 +8,6 @@ import pytest
 from src.consumir_gemini import enviar_peticion, parsear_respuesta_json, obtener_indicador_economico
 
 
-# Datos de prueba del Auditor Inteligente de Contratos, SLAs y Políticas de Compra
 CLAUSULA_SLA = (
     "El Proveedor garantiza una disponibilidad mensual del servicio de 99,5%. "
     "Por cada hora adicional de indisponibilidad se aplicará una multa de 2 UF, "
